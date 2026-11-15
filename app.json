@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Panadería Eduardo · Admin",
+    "name": "Panadería Control",
     "slug": "appcafeteria",
-    "version": "1.0.17",
+    "version": "1.0.2",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "appcafeteria",
@@ -17,7 +17,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.tatanstudios.panaderiacontrol",
-      "versionCode": 18
+      "versionCode": 2
     },
     "web": {
       "output": "server",

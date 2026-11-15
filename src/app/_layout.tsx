@@ -1,4 +1,5 @@
 import { router, Stack, useSegments } from 'expo-router';
+import { useKeepAwake } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -64,6 +65,18 @@ function ImpresionLocal() {
   return null;
 }
 
+// Con sesión abierta la pantalla de la tablet no se apaga sola (menú, venta, bloqueo con PIN...):
+// si se apagara, Android pausa la app y deja de imprimir la cola de comandas
+function PantallaEncendida() {
+  useKeepAwake();
+  return null;
+}
+
+function MantenerEncendida() {
+  const { usuario } = useSesion();
+  return usuario ? <PantallaEncendida /> : null;
+}
+
 export default function RootLayout() {
   return (
     <SesionProvider>
@@ -71,6 +84,7 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <Navegacion />
         <ImpresionLocal />
+        <MantenerEncendida />
         <AutorizacionGlobal />
         <PantallaBloqueo />
         <Notificaciones />
