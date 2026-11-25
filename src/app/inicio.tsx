@@ -32,7 +32,7 @@ const MODULOS: Modulo[] = [
 ];
 
 export default function Inicio() {
-  const { usuario, cajaId, puede, salir, refrescarUsuario } = useSesion();
+  const { usuario, cajaId, cajaFija, puede, salir, refrescarUsuario } = useSesion();
   const { cola } = useConexion();
   const { width } = useWindowDimensions();
   // null = todavía no se sabe; sin turno abierto solo se consulta (caja, inventario, resumen).
@@ -42,7 +42,7 @@ export default function Inicio() {
   const [miPin, setMiPin] = useState(false);
 
   useFocusEffect(useCallback(() => {
-    if (!cajaId) return;
+    if (!cajaId) { setTurno(null); return; }
     getTurnoActual(cajaId)
       .then((r) => setTurno({
         caja: r.caja.nombre,
@@ -103,6 +103,17 @@ export default function Inicio() {
           <Boton titulo="Salir" variante="neutro" chico onPress={() => setSaliendo(true)} />
         </View>
 
+        {cajaFija && !cajaId && (
+          <View style={[e.aviso, e.avisoAjeno]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[e.avisoTitulo, { color: '#991B1B' }]}>No tienes una caja asignada</Text>
+              <Text style={[e.avisoTexto, { color: '#7F1D1D' }]}>
+                No puedes abrir turno ni cobrar. Pide al administrador que te asigne una caja en Usuarios.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {sinTurno && (
           <View style={e.aviso}>
             <View style={{ flex: 1 }}>
@@ -127,7 +138,7 @@ export default function Inicio() {
 
         <View style={e.rejilla}>
           {visibles.map((m) => {
-            const bloqueado = (sinTurno || turnoAjeno) && !m.sinTurno;
+            const bloqueado = (sinTurno || turnoAjeno || (cajaFija && !cajaId)) && !m.sinTurno;
             return (
             <Pressable key={m.titulo} onPress={() => router.push(m.ruta)} disabled={bloqueado}
               style={({ pressed }) => [e.modulo, { width: ancho, borderTopColor: m.color, opacity: bloqueado ? 0.4 : pressed ? 0.85 : 1 }]}>

@@ -16,7 +16,7 @@ type Turno = Awaited<ReturnType<typeof getTurnoActual>>;
 
 // Caja de esta tablet y su turno. Para cobrar hace falta un turno abierto.
 export default function CajaPantalla() {
-  const { cajaId, fijarCaja, puede, usuario } = useSesion();
+  const { cajaId, cajaFija, fijarCaja, puede, usuario } = useSesion();
   const [cajas, setCajas] = useState<Caja[] | null>(null);
   const [turno, setTurno] = useState<Turno | null>(null);
   const [fondo, setFondo] = useState('');
@@ -37,6 +37,7 @@ export default function CajaPantalla() {
       const cat = await getCatalogosCaja();
       setCajas(cat.cajas);
       if (cajaId) mostrarTurno(await getTurnoActual(cajaId));
+      else mostrarTurno(null);
     } catch (e) {
       avisar('No se pudo cargar la caja', mensajeError(e));
       setCajas([]);
@@ -46,6 +47,7 @@ export default function CajaPantalla() {
   useFocusEffect(useCallback(() => { cargar(); }, [cargar]));
 
   const elegir = async (id: number) => {
+    if (cajaFija) return;
     await fijarCaja(id);
     mostrarTurno(await getTurnoActual(id).catch(() => null));
   };
@@ -65,24 +67,36 @@ export default function CajaPantalla() {
 
   if (!cajas) return <Cargando />;
 
+  // Mesero sin caja, o con su caja desactivada: no puede abrir turno
+  const sinCaja = cajaFija && (!cajaId || !cajas.some((c) => c.id === cajaId));
+
   return (
     <SafeAreaView style={e.pantalla}>
       <ScrollView contentContainerStyle={e.contenido}>
-        <Text style={e.titulo}>Caja de esta tablet</Text>
-        <Text style={e.suave}>Las ventas que se cobren aquí entran al turno de esta caja.</Text>
+        <Text style={e.titulo}>{cajaFija ? `Caja de ${usuario?.nombre ?? ''}` : 'Caja de esta tablet'}</Text>
+        <Text style={e.suave}>
+          {cajaFija ? 'Trabajas siempre en la caja que te asignó el administrador.' : 'Las ventas que se cobren aquí entran al turno de esta caja.'}
+        </Text>
+
+        {sinCaja && (
+          <View style={e.bloque}>
+            <Text style={e.aviso}>{cajaId ? `Tu caja asignada (${usuario?.caja_nombre ?? ''}) está desactivada.` : 'No tienes una caja asignada.'}</Text>
+            <Text style={e.suave}>No puedes abrir turno. Pide al administrador que te asigne una caja en Usuarios.</Text>
+          </View>
+        )}
 
         <View style={e.cajas}>
-          {cajas.map((c) => (
+          {cajas.filter((c) => !cajaFija || c.id === cajaId).map((c) => (
             <Pressable key={c.id} onPress={() => elegir(c.id)}
               style={[e.caja, cajaId === c.id && { borderColor: C.primario, backgroundColor: '#EFF6FF' }]}>
               <Text style={e.cajaNombre}>{c.nombre}</Text>
               <Text style={e.suave}>{c.turno_abierto ? `Turno abierto por ${c.turno_abierto.usuario}` : 'Sin turno abierto'}</Text>
             </Pressable>
           ))}
-          {cajas.length === 0 && <Text style={e.suave}>No hay cajas activas. Créalas en Ajustes › Negocio, cajas y pagos (o en la web).</Text>}
+          {cajas.length === 0 && !cajaFija && <Text style={e.suave}>No hay cajas activas. Créalas en Ajustes › Negocio, cajas y pagos (o en la web).</Text>}
         </View>
 
-        {cajaId && turno && (
+        {cajaId && !sinCaja && turno && (
           turno.turno ? (
             <View style={e.bloque}>
               <Text style={e.ok}>Turno abierto por {turno.turno.usuario_apertura} · {fecha(turno.turno.abierto_at)}</Text>
@@ -127,7 +141,7 @@ export default function CajaPantalla() {
           )
         )}
 
-        <Boton titulo="Continuar" onPress={() => router.replace('/inicio')} deshabilitado={!cajaId} />
+        <Boton titulo="Continuar" onPress={() => router.replace('/inicio')} deshabilitado={!cajaId && !cajaFija} />
       </ScrollView>
     </SafeAreaView>
   );

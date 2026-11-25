@@ -12,6 +12,10 @@ export interface Usuario {
   permissions: string[];
   tiene_pin?: boolean;
   pin_actualizado_at?: string | null;
+  // Sin «caja.elegir_caja» (meseros) se trabaja solo en la caja que asignó el administrador
+  elige_caja?: boolean;
+  caja_id?: number | null;
+  caja_nombre?: string | null;
 }
 
 export interface TerminalMapa {

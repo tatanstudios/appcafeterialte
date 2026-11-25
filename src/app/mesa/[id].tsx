@@ -236,6 +236,7 @@ export default function TerminalMesa() {
   };
 
   const cambiarCantidad = (i: ItemOrden, delta: number) => {
+    if (i.pagado) return;
     const nueva = i.cantidad + delta;
     if (nueva <= 0) return quitarPendiente(i);
     hacer(() => srv.actualizarItem(i.id, { cantidad: nueva }));
@@ -568,7 +569,8 @@ export default function TerminalMesa() {
               </View>
               <View style={{ alignItems: 'flex-end', gap: 6 }}>
                 <Text style={e.lineaMonto}>{dinero(i.subtotal)}</Text>
-                {i.estado === 'pendiente' ? (
+                {/* Lo ya cobrado no se cambia: ni cantidad, ni extras, ni ingredientes */}
+                {i.estado === 'pendiente' && !i.pagado ? (
                   <>
                     <View style={e.pasos}>
                       <Pressable style={e.paso} onPress={() => cambiarCantidad(i, -1)} disabled={ocupado}><Text style={e.pasoTexto}>−</Text></Pressable>

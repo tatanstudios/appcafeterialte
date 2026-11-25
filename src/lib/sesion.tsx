@@ -11,7 +11,8 @@ interface Sesion {
   listo: boolean;              // ya se leyó lo guardado en el dispositivo
   servidor: string;
   usuario: Usuario | null;
-  cajaId: number | null;
+  cajaId: number | null;       // caja con la que se trabaja: la de la tablet o, para meseros, la suya
+  cajaFija: boolean;           // el usuario no elige caja: usa la asignada (cajaId null = no tiene)
   fijarServidor: (valor: string) => Promise<void>;
   entrar: (email: string, password: string) => Promise<void>;
   tabletRegistrada: boolean;   // ya alguien entró aquí con correo y contraseña: se puede entrar con PIN
@@ -43,7 +44,11 @@ export function SesionProvider({ children }: { children: ReactNode }) {
   const [listo, setListo] = useState(false);
   const [servidor, setServidor] = useState('');
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [cajaId, setCajaId] = useState<number | null>(null);
+  const [cajaTablet, setCajaId] = useState<number | null>(null);
+  // Los meseros no eligen: trabajan en la caja que les asignó el administrador; la tablet es compartida,
+  // así que la caja cambia con quien tiene la sesión. Sin caja asignada no pueden abrir turno.
+  const cajaFija = usuario?.elige_caja === false;
+  const cajaId = cajaFija ? (usuario?.caja_id ?? null) : cajaTablet;
   const [bloqueada, setBloqueada] = useState(false);
   const [dispositivo, setDispositivo] = useState<string | null>(null);
 
@@ -207,8 +212,8 @@ export function SesionProvider({ children }: { children: ReactNode }) {
   );
 
   const valor = useMemo(
-    () => ({ listo, servidor, usuario, cajaId, fijarServidor, entrar, tabletRegistrada: !!dispositivo, entrarConPin, salir, fijarCaja, puede, refrescarUsuario, bloqueada, bloquear, desbloquear }),
-    [listo, servidor, usuario, cajaId, fijarServidor, entrar, dispositivo, entrarConPin, salir, fijarCaja, puede, refrescarUsuario, bloqueada, bloquear, desbloquear],
+    () => ({ listo, servidor, usuario, cajaId, cajaFija, fijarServidor, entrar, tabletRegistrada: !!dispositivo, entrarConPin, salir, fijarCaja, puede, refrescarUsuario, bloqueada, bloquear, desbloquear }),
+    [listo, servidor, usuario, cajaId, cajaFija, fijarServidor, entrar, dispositivo, entrarConPin, salir, fijarCaja, puede, refrescarUsuario, bloqueada, bloquear, desbloquear],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
