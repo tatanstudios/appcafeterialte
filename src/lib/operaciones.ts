@@ -299,6 +299,12 @@ export interface Manual {
 }
 export interface ModuloManual { id: string; titulo: string; descripcion: string; manuales: Manual[] }
 
+// ── Asistente (IA): la conversación se manda completa en cada pregunta ──
+export interface MensajeAsistente { role: 'user' | 'assistant'; content: string; anotada?: boolean }
+export const preguntarAsistente = (mensajes: MensajeAsistente[]) =>
+  api.post<{ respuesta: string; consultas: { herramienta: string }[]; sin_respuesta: { pregunta: string; falta: string }[]; tokens: number }>(
+    '/asistente/chat', { mensajes: mensajes.slice(-20).map((m) => ({ role: m.role, content: m.content })) }, 180000);
+
 export const getManuales = () => api.get<{ actualizado: string | null; modulos: ModuloManual[] }>('/manuales');
 
 // ── Anulaciones (piden motivo; si hace falta, la API pide el PIN del encargado) ──
