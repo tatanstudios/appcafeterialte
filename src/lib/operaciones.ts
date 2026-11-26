@@ -305,6 +305,11 @@ export const preguntarAsistente = (mensajes: MensajeAsistente[]) =>
   api.post<{ respuesta: string; consultas: { herramienta: string }[]; sin_respuesta: { pregunta: string; falta: string }[]; tokens: number }>(
     '/asistente/chat', { mensajes: mensajes.slice(-20).map((m) => ({ role: m.role, content: m.content })) }, 180000);
 
+// Preguntas que el asistente no pudo contestar; «resuelta» la quita de la lista (queda en Auditoría)
+export interface PreguntaSinRespuesta { id: number; fecha: string; usuario: string | null; pregunta: string; falta: string }
+export const getPreguntasSinRespuesta = () => api.get<{ preguntas: PreguntaSinRespuesta[] }>('/asistente/sin-respuesta');
+export const resolverPreguntaSinRespuesta = (id: number) => api.post<{ message: string }>(`/asistente/sin-respuesta/${id}/resolver`);
+
 export const getManuales = () => api.get<{ actualizado: string | null; modulos: ModuloManual[] }>('/manuales');
 
 // ── Anulaciones (piden motivo; si hace falta, la API pide el PIN del encargado) ──
